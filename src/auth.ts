@@ -46,8 +46,8 @@ export async function exchange(
       'User-Agent': 'claude-cli/2.1.2 (external, cli)',
     },
     body: new URLSearchParams({
-      code: splits[0],
-      state: splits[1],
+      code: splits[0] ?? '',
+      state: splits[1] ?? '',
       grant_type: 'authorization_code',
       client_id: CLIENT_ID,
       redirect_uri: 'https://console.anthropic.com/oauth/code/callback',
