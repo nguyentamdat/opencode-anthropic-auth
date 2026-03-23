@@ -25,19 +25,27 @@ if [ ! -f "$BUNDLE" ]; then
   exit 1
 fi
 
-# Determine cache path
-# macOS: ~/.cache/opencode/node_modules/...
-# Linux: ~/.cache/opencode/node_modules/... (same XDG default)
-CACHE_DIR="$HOME/.cache/opencode/node_modules/opencode-anthropic-auth"
+# Determine cache base
+CACHE_BASE="$HOME/.cache/opencode/node_modules"
 if [ -n "$XDG_CACHE_HOME" ]; then
-  CACHE_DIR="$XDG_CACHE_HOME/opencode/node_modules/opencode-anthropic-auth"
+  CACHE_BASE="$XDG_CACHE_HOME/opencode/node_modules"
 fi
-CACHE_TARGET="$CACHE_DIR/index.mjs"
 
-# Patch cache
+# Patch old path: opencode-anthropic-auth (single bundle)
+CACHE_DIR="$CACHE_BASE/opencode-anthropic-auth"
 mkdir -p "$CACHE_DIR"
-cp -f "$BUNDLE" "$CACHE_TARGET"
-echo "  [OK] Patched $CACHE_TARGET"
+cp -f "$BUNDLE" "$CACHE_DIR/index.mjs"
+echo "  [OK] Patched $CACHE_DIR/index.mjs"
+
+# Patch new path: @ex-machina/opencode-anthropic-auth (split dist)
+EX_CACHE_DIR="$CACHE_BASE/@ex-machina/opencode-anthropic-auth/dist"
+EX_SRC_DIR="$SCRIPT_DIR/ex-machina-dist"
+if [ -d "$EX_SRC_DIR" ] && [ -d "$(dirname "$EX_CACHE_DIR")" ]; then
+  mkdir -p "$EX_CACHE_DIR"
+  cp -f "$EX_SRC_DIR/auth.js" "$EX_CACHE_DIR/auth.js"
+  cp -f "$EX_SRC_DIR/index.js" "$EX_CACHE_DIR/index.js"
+  echo "  [OK] Patched $EX_CACHE_DIR/{auth,index}.js"
+fi
 
 # Determine shell rc file
 SHELL_RC=""
@@ -59,18 +67,25 @@ MARKER="# auto-patch anthropic auth"
 if ! grep -q "$MARKER" "$SHELL_RC" 2>/dev/null; then
   cat >> "$SHELL_RC" << 'PATCH'
 
-# auto-patch anthropic auth on every shell start
-_OC_AUTH_SRC="$HOME/.config/opencode/opencode-anthropic-auth/index.mjs"
-_OC_AUTH_DST="${XDG_CACHE_HOME:-$HOME/.cache}/opencode/node_modules/opencode-anthropic-auth/index.mjs"
-if [ -f "$_OC_AUTH_SRC" ]; then
-  mkdir -p "$(dirname "$_OC_AUTH_DST")" 2>/dev/null
-  cp -f "$_OC_AUTH_SRC" "$_OC_AUTH_DST" 2>/dev/null
+# auto-patch anthropic auth on every shell start (both old and new package paths)
+_OC_AUTH_CFG="$HOME/.config/opencode/opencode-anthropic-auth"
+_OC_AUTH_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/opencode/node_modules"
+# patch old: opencode-anthropic-auth (single bundle)
+if [ -f "$_OC_AUTH_CFG/index.mjs" ]; then
+  mkdir -p "$_OC_AUTH_CACHE/opencode-anthropic-auth" 2>/dev/null
+  cp -f "$_OC_AUTH_CFG/index.mjs" "$_OC_AUTH_CACHE/opencode-anthropic-auth/index.mjs" 2>/dev/null
 fi
-unset _OC_AUTH_SRC _OC_AUTH_DST
+# patch new: @ex-machina/opencode-anthropic-auth (split dist)
+if [ -d "$_OC_AUTH_CFG/ex-machina-dist" ]; then
+  mkdir -p "$_OC_AUTH_CACHE/@ex-machina/opencode-anthropic-auth/dist" 2>/dev/null
+  cp -f "$_OC_AUTH_CFG/ex-machina-dist/auth.js" "$_OC_AUTH_CACHE/@ex-machina/opencode-anthropic-auth/dist/auth.js" 2>/dev/null
+  cp -f "$_OC_AUTH_CFG/ex-machina-dist/index.js" "$_OC_AUTH_CACHE/@ex-machina/opencode-anthropic-auth/dist/index.js" 2>/dev/null
+fi
+unset _OC_AUTH_CFG _OC_AUTH_CACHE
 PATCH
   echo "  [OK] Added auto-patch to $SHELL_RC"
 else
-  echo "  [OK] Auto-patch already in $SHELL_RC"
+  echo "  [OK] Auto-patch already in $SHELL_RC — please verify it covers both old and new paths"
 fi
 
 echo ""
