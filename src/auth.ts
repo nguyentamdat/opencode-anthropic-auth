@@ -81,6 +81,9 @@ function successPage() {
   <body>
     <h1>Authorization complete</h1>
     <p>You can close this window and return to OpenCode.</p>
+    <p style="margin-top: 20px; font-size: 12px; color: #666;">
+      If using a remote machine, copy the URL from your browser's address bar and paste it into the terminal.
+    </p>
   </body>
 </html>`
 }
@@ -132,6 +135,7 @@ async function createCallbackServer(expectedState: string) {
   let cleanupTimer: ReturnType<typeof setTimeout> | undefined
   let resolveResult: ((result: string) => void) | undefined
   let rejectResult: ((error: Error) => void) | undefined
+  let redirectUrl: string | null = null
 
   const server = createServer((req, res) => {
     const requestUrl = new URL(
@@ -164,12 +168,14 @@ async function createCallbackServer(expectedState: string) {
       return
     }
 
+    redirectUrl = requestUrl.toString()
+
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
     res.end(successPage())
 
     if (!settled) {
       settled = true
-      resolveResult?.(requestUrl.toString())
+      resolveResult?.(redirectUrl)
     }
   })
 

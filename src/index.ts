@@ -158,7 +158,8 @@ export const AnthropicAuthPlugin: Plugin = async ({ client }) => {
             const result = await authorize('max')
             return {
               url: result.url,
-              instructions: 'Complete authorization in the browser.',
+              instructions:
+                'Complete authorization in the browser. If on a remote machine, copy the full redirect URL and paste it into the terminal.',
               method: 'auto',
               callback: result.callback,
             }
@@ -171,7 +172,8 @@ export const AnthropicAuthPlugin: Plugin = async ({ client }) => {
             const auth = await authorize('console')
             return {
               url: auth.url,
-              instructions: 'Complete authorization in the browser.',
+              instructions:
+                'Complete authorization in the browser. If on a remote machine, copy the full redirect URL and paste it into the terminal.',
               method: 'auto',
               callback: async () => {
                 const credentials = await auth.callback()
