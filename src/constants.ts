@@ -5,7 +5,7 @@ export const AUTHORIZE_URLS = {
   max: 'https://claude.ai/oauth/authorize',
 } as const
 
-export const TOKEN_URL = 'https://platform.claude.com/v1/oauth/token'
+export const TOKEN_URL = 'https://console.anthropic.com/v1/oauth/token'
 
 export const OAUTH_SCOPES = [
   'org:create_api_key',
