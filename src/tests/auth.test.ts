@@ -18,7 +18,7 @@ describe('authorize', () => {
     const result = await authorize('console')
 
     const url = new URL(result.url)
-    expect(url.origin).toBe('https://console.anthropic.com')
+    expect(url.origin).toBe('https://platform.claude.com')
     expect(url.pathname).toBe('/oauth/authorize')
   })
 
@@ -33,7 +33,7 @@ describe('authorize', () => {
       'https://console.anthropic.com/oauth/code/callback',
     )
     expect(url.searchParams.get('scope')).toBe(
-      'org:create_api_key user:profile user:inference',
+      'org:create_api_key user:profile user:inference user:sessions:claude_code user:mcp_servers user:file_upload',
     )
     expect(url.searchParams.get('code_challenge_method')).toBe('S256')
   })

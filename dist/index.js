@@ -16,7 +16,6 @@ export const AnthropicAuthPlugin = async ({ client }) => {
             async loader(getAuth, provider) {
                 const auth = await getAuth();
                 if (auth.type === 'oauth') {
-                    // zero out cost for max plan
                     for (const model of Object.values(provider.models)) {
                         model.cost = {
                             input: 0,
@@ -118,12 +117,11 @@ export const AnthropicAuthPlugin = async ({ client }) => {
                     authorize: async () => {
                         const { url, verifier } = await authorize('max');
                         return {
-                            url: url,
+                            url,
                             instructions: 'Paste the authorization code here: ',
                             method: 'code',
                             callback: async (code) => {
-                                const credentials = await exchange(code, verifier);
-                                return credentials;
+                                return await exchange(code, verifier);
                             },
                         };
                     },
@@ -134,7 +132,7 @@ export const AnthropicAuthPlugin = async ({ client }) => {
                     authorize: async () => {
                         const { url, verifier } = await authorize('console');
                         return {
-                            url: url,
+                            url,
                             instructions: 'Paste the authorization code here: ',
                             method: 'code',
                             callback: async (code) => {

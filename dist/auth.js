@@ -1,13 +1,13 @@
 import { generatePKCE } from '@openauthjs/openauth/pkce';
-import { CLIENT_ID } from './constants';
+import { AUTHORIZE_URLS, CLIENT_ID, OAUTH_SCOPES, TOKEN_URL } from './constants';
 export async function authorize(mode) {
     const pkce = await generatePKCE();
-    const url = new URL(`https://${mode === 'console' ? 'console.anthropic.com' : 'claude.ai'}/oauth/authorize`, import.meta.url);
+    const url = new URL(AUTHORIZE_URLS[mode], import.meta.url);
     url.searchParams.set('code', 'true');
     url.searchParams.set('client_id', CLIENT_ID);
     url.searchParams.set('response_type', 'code');
     url.searchParams.set('redirect_uri', 'https://console.anthropic.com/oauth/code/callback');
-    url.searchParams.set('scope', 'org:create_api_key user:profile user:inference');
+    url.searchParams.set('scope', OAUTH_SCOPES.join(' '));
     url.searchParams.set('code_challenge', pkce.challenge);
     url.searchParams.set('code_challenge_method', 'S256');
     url.searchParams.set('state', pkce.verifier);
@@ -18,7 +18,7 @@ export async function authorize(mode) {
 }
 export async function exchange(code, verifier) {
     const splits = code.split('#');
-    const result = await fetch('https://console.anthropic.com/v1/oauth/token', {
+    const result = await fetch(TOKEN_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',

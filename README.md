@@ -1,25 +1,37 @@
-# OpenCode Anthropic Auth Plugin (MoerAI Fork)
+# OpenCode Anthropic Auth Plugin
 
-Forked from [ex-machina-co/opencode-anthropic-auth](https://github.com/ex-machina-co/opencode-anthropic-auth) to fix **OAuth token exchange 429 errors**.
+An [OpenCode](https://github.com/anomalyco/opencode) plugin that provides Anthropic OAuth authentication, enabling Claude Pro/Max users to use their subscription directly with OpenCode.
+
+Based on [ex-machina-co/opencode-anthropic-auth](https://github.com/ex-machina-co/opencode-anthropic-auth) with fixes from [MoerAI](https://github.com/MoerAI/opencode-anthropic-auth).
 
 ## What This Fork Fixes
 
-The upstream plugin has two bugs that cause `Failed to authorize` / `Token refresh failed: 429`:
+The upstream plugin has bugs that cause `Failed to authorize` / `Token refresh failed: 429`:
 
 1. **Wrong `Content-Type`**: Token exchange and refresh send `application/json`, but Anthropic's `/v1/oauth/token` expects `application/x-www-form-urlencoded` (OAuth 2.0 RFC 6749 §4.1.3)
-2. **Missing `User-Agent`**: Anthropic rate-limits token requests without `claude-cli/2.1.2 (external, cli)` User-Agent header. The upstream plugin sets this for API calls but omits it from token exchange/refresh
+2. **Missing `User-Agent`**: Anthropic rate-limits token requests without `claude-cli/2.1.2 (external, cli)` User-Agent header
+3. **Incomplete OAuth scopes**: Added `user:sessions:claude_code`, `user:mcp_servers`, `user:file_upload`
+4. **Constants extraction**: OAuth URLs, token URL, and scopes extracted to `constants.ts` for maintainability
 
-> **Note (2026-03):** The upstream has been republished as `@ex-machina/opencode-anthropic-auth@0.1.0` but the same two bugs remain. This fork patches both the old (`opencode-anthropic-auth`) and the new (`@ex-machina/opencode-anthropic-auth`) cache paths.
+## Usage
+
+Add the plugin to your OpenCode configuration:
+
+```json
+{
+  "plugin": ["@nguyentamdat/opencode-anthropic-auth"]
+}
+```
 
 ## Important: `opencode.json` Plugin Path
 
 If you reference this plugin via `file://` in your `opencode.json`, you **must** point to the single-file bundle (`index.mjs`), **not** `dist/index.js`. The split `dist/` files use extensionless ESM imports (`import './auth'`) which fail under Node.js ESM resolution:
 
 ```jsonc
-// ✅ Correct — single-file bundle, no import resolution issues
+// Correct — single-file bundle, no import resolution issues
 "plugin": ["file:///path/to/opencode-anthropic-auth/index.mjs"]
 
-// ❌ Wrong — dist/index.js imports ./auth which Node.js cannot resolve without .js extension
+// Wrong — dist/index.js imports ./auth which Node.js cannot resolve without .js extension
 "plugin": ["file:///path/to/opencode-anthropic-auth/dist/index.js"]
 ```
 
@@ -28,8 +40,8 @@ If you reference this plugin via `file://` in your `opencode.json`, you **must**
 ### macOS / Ubuntu (Linux)
 
 ```bash
-# 1. Clone this fork
-git clone https://github.com/MoerAI/opencode-anthropic-auth.git ~/.config/opencode/opencode-anthropic-auth
+# 1. Clone this repo
+git clone https://github.com/nguyentamdat/opencode-anthropic-auth.git ~/.config/opencode/opencode-anthropic-auth
 
 # 2. Run installer (patches cache + adds auto-patch to shell rc)
 bash ~/.config/opencode/opencode-anthropic-auth/install.sh
@@ -41,8 +53,8 @@ opencode auth login  # → Anthropic → Claude Pro/Max
 ### Windows (PowerShell)
 
 ```powershell
-# 1. Clone this fork
-git clone https://github.com/MoerAI/opencode-anthropic-auth.git "$env:USERPROFILE\.config\opencode\opencode-anthropic-auth"
+# 1. Clone this repo
+git clone https://github.com/nguyentamdat/opencode-anthropic-auth.git "$env:USERPROFILE\.config\opencode\opencode-anthropic-auth"
 
 # 2. Run installer (patches cache + adds auto-patch to PowerShell profile)
 powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\.config\opencode\opencode-anthropic-auth\install.ps1"
@@ -71,6 +83,14 @@ The installer automatically adds an auto-patch hook to your shell:
 
 This ensures the patch survives `opencode upgrade`.
 
+## Authentication Methods
+
+The plugin provides three authentication options:
+
+- **Claude Pro/Max** - OAuth flow via `claude.ai` for Pro/Max subscribers. Uses your existing subscription at no additional API cost.
+- **Create an API Key** - OAuth flow via `console.anthropic.com` that creates an API key on your behalf.
+- **Manually enter API Key** - Standard API key entry for users who already have one.
+
 ## File Structure
 
 ```
@@ -81,9 +101,9 @@ ex-machina-dist/       # Patched dist files for @ex-machina cache path
 dist/                  # TypeScript compiled output
 dist-bundle/           # Bun-bundled single file
 src/                   # TypeScript source
-  auth.ts              # OAuth authorize + exchange (FIXED)
-  index.ts             # Plugin entry, token refresh (FIXED)
-  constants.ts         # CLIENT_ID, beta headers
+  auth.ts              # OAuth authorize + exchange
+  index.ts             # Plugin entry, token refresh
+  constants.ts         # CLIENT_ID, OAuth URLs, scopes, beta headers
   transform.ts         # Request headers, URL rewrite, tool prefix
   tests/               # Test suite (59 tests)
 ```

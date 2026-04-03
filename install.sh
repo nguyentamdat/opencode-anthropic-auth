@@ -1,5 +1,5 @@
 #!/bin/bash
-# MoerAI/opencode-anthropic-auth installer
+# nguyentamdat/opencode-anthropic-auth installer
 # Patches opencode's built-in anthropic auth to fix 429 token exchange errors
 # Supports: macOS, Ubuntu/Linux
 
@@ -16,7 +16,7 @@ case "$OS" in
   *)      echo "ERROR: Unsupported OS: $OS (use install.ps1 for Windows)"; exit 1 ;;
 esac
 
-echo "Installing MoerAI/opencode-anthropic-auth for $PLATFORM..."
+echo "Installing nguyentamdat/opencode-anthropic-auth for $PLATFORM..."
 
 # Verify bundle exists
 if [ ! -f "$BUNDLE" ]; then

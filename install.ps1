@@ -1,4 +1,4 @@
-# MoerAI/opencode-anthropic-auth installer for Windows
+# nguyentamdat/opencode-anthropic-auth installer for Windows
 # Patches opencode's built-in anthropic auth to fix 429 token exchange errors
 # Run: powershell -ExecutionPolicy Bypass -File install.ps1
 
@@ -7,7 +7,7 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Bundle = Join-Path $ScriptDir "index.mjs"
 
-Write-Host "Installing MoerAI/opencode-anthropic-auth for Windows..."
+Write-Host "Installing nguyentamdat/opencode-anthropic-auth for Windows..."
 
 # Verify bundle exists
 if (-not (Test-Path $Bundle)) {
