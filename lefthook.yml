@@ -2,4 +2,5 @@ pre-commit:
   commands:
     biome:
       glob: "*.{ts,js,json}"
+      exclude: "ex-machina-dist/**"
       run: bunx biome check {staged_files}
